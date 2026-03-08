@@ -1,3 +1,5 @@
+"""Plotly chart builders used across dashboard sections."""
+
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -9,6 +11,8 @@ from src.data_layer import derive_stint_windows, fetch_driver_car_data
 
 
 def create_session_timeline(laps_enriched, stints, race_control, weather, selected_driver_numbers):
+    """Create a unified timeline view with laps, stints, race control, and weather."""
+
     fig = go.Figure()
     has_any = False
 
@@ -143,6 +147,8 @@ def create_session_timeline(laps_enriched, stints, race_control, weather, select
     return fig
 
 def create_tyre_analytics_charts(laps_enriched):
+    """Build tyre-related charts: compound pace, stint degradation, and lap-type comparison."""
+
     if laps_enriched.empty:
         return None, None, None
 
@@ -255,6 +261,8 @@ def create_tyre_analytics_charts(laps_enriched):
     return pace_fig, degr_fig, compare_fig
 
 def create_lap_phase_distribution_chart(laps_classified, selected_driver_numbers):
+    """Create distribution chart for classified lap phases."""
+
     if laps_classified.empty:
         return None
     df = laps_classified.copy()
@@ -297,6 +305,8 @@ def create_lap_phase_distribution_chart(laps_classified, selected_driver_numbers
     return fig
 
 def create_long_run_chart(long_run_df):
+    """Plot long-run tradeoff between degradation and average pace."""
+
     if long_run_df.empty:
         return None
     fig = go.Figure()
@@ -336,6 +346,8 @@ def create_long_run_chart(long_run_df):
     return fig
 
 def create_scorecard_charts(driver_score, team_score):
+    """Create bar charts for driver and team executive scores."""
+
     driver_fig = None
     team_fig = None
 
@@ -387,6 +399,8 @@ def create_scorecard_charts(driver_score, team_score):
     return driver_fig, team_fig
 
 def create_teammate_timing_chart(team_df):
+    """Compare teammate lap and sector times in grouped bars."""
+
     if team_df.empty or len(team_df) < 2:
         return None
     metrics = [m for m in ["lap_duration", "duration_sector_1", "duration_sector_2", "duration_sector_3"] if m in team_df.columns]
@@ -420,6 +434,8 @@ def create_teammate_timing_chart(team_df):
     return fig
 
 def create_teammate_ops_chart(team_df):
+    """Compare teammate consistency and execution in a dual-axis chart."""
+
     if team_df.empty or len(team_df) < 2:
         return None
     if "consistency_std" not in team_df.columns and "push_ratio" not in team_df.columns:
@@ -464,6 +480,8 @@ def create_teammate_ops_chart(team_df):
     return fig
 
 def build_driver_delta_trace(laps, location, position, session_key, driver_number):
+    """Build normalized lap trace (progress vs elapsed time) for telemetry delta."""
+
     if laps.empty:
         return None
 
@@ -534,6 +552,8 @@ def build_driver_delta_trace(laps, location, position, session_key, driver_numbe
     return trace
 
 def create_telemetry_delta_chart(trace_a, trace_b, label_a, label_b):
+    """Create cumulative delta chart between two normalized traces."""
+
     if trace_a is None or trace_b is None:
         return None
 
@@ -564,6 +584,8 @@ def create_telemetry_delta_chart(trace_a, trace_b, label_a, label_b):
     return fig
 
 def _normalize_track_xy(df):
+    """Normalize telemetry coordinates into `x`/`y` columns."""
+
     if df.empty:
         return pd.DataFrame(), None
 
@@ -583,6 +605,8 @@ def _normalize_track_xy(df):
     return out, f"{x_col}/{y_col}"
 
 def create_driver_comparison_chart(best_laps, selected_driver_numbers):
+    """Create direct comparison chart for selected drivers and sector splits."""
+
     if not selected_driver_numbers:
         return None
 
@@ -631,6 +655,8 @@ def create_driver_comparison_chart(best_laps, selected_driver_numbers):
     return fig
 
 def create_lap_evolution_chart(lap_times, selected_driver_numbers):
+    """Create lap-by-lap pace evolution chart for selected drivers."""
+
     if lap_times.empty or not selected_driver_numbers:
         return None
 
@@ -673,6 +699,8 @@ def create_lap_evolution_chart(lap_times, selected_driver_numbers):
     return fig
 
 def create_consistency_boxplot(lap_times, selected_driver_numbers):
+    """Create lap-time distribution boxplots for consistency analysis."""
+
     if lap_times.empty or not selected_driver_numbers:
         return None
 
@@ -720,6 +748,8 @@ def create_race_position_evolution_chart(
     only_finishers=False,
     completion_ratio=0.9,
 ):
+    """Build race position progression by lap, with optional finisher filtering."""
+
     if position_df.empty or laps_df.empty:
         return None
     if any(c not in position_df.columns for c in ["date", "driver_number", "position"]):
@@ -866,6 +896,8 @@ def create_race_position_evolution_chart(
     return fig
 
 def create_sector_delta_heatmap(best_laps):
+    """Create heatmap of sector deltas versus session leader."""
+
     sector_cols = ["duration_sector_1", "duration_sector_2", "duration_sector_3"]
     if best_laps.empty or any(col not in best_laps.columns for col in sector_cols):
         return None
@@ -912,6 +944,8 @@ def create_sector_delta_heatmap(best_laps):
     return fig
 
 def create_sector_3d_chart(best_laps):
+    """Create 3D sector-space scatter (S1, S2, S3) by driver."""
+
     sector_cols = ["duration_sector_1", "duration_sector_2", "duration_sector_3"]
     if best_laps.empty or any(col not in best_laps.columns for col in sector_cols):
         return None
@@ -973,6 +1007,8 @@ def create_sector_3d_chart(best_laps):
     return fig
 
 def create_professional_infographic(best_laps, rankings, team_summary, session, session_type=None, race_winner=None):
+    """Create the flagship multi-panel infographic dashboard figure."""
+
     best_laps = best_laps.copy()
     is_race = session_type == "race"
 

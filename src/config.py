@@ -1,3 +1,5 @@
+"""Application-level constants and configuration objects."""
+
 import logging
 from dataclasses import dataclass
 
@@ -7,6 +9,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class AppConfig:
+    """Immutable runtime settings used by the Streamlit app."""
+
     default_year: int = 2026
     default_country_filter: str = "Australia"
     cache_ttl_short: int = 300

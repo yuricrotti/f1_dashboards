@@ -1,3 +1,5 @@
+"""Streamlit application orchestration for the F1 Intelligence dashboard."""
+
 import pandas as pd
 import streamlit as st
 
@@ -47,6 +49,8 @@ from src.ui_components import inject_brand_style, render_hero, render_kpi_card, 
 
 
 def main():
+    """Run the full Streamlit workflow: load data, compute analytics, render sections."""
+
     st.set_page_config(page_title="F1 OpenF1 Dashboard", layout="wide")
     inject_brand_style()
     initialize_session_state()

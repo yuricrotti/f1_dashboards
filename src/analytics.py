@@ -1,8 +1,12 @@
+"""Data transformations and analytical features for dashboard insights."""
+
 import pandas as pd
 import numpy as np
 
 
 def compute_best_laps(laps, drivers):
+    """Compute each driver's best lap and ranking relative to session leader."""
+
     if laps.empty:
         raise ValueError("DataFrame laps está vazio.")
 
@@ -58,6 +62,8 @@ def compute_best_laps(laps, drivers):
     return best_laps
 
 def sector_rankings(best_laps):
+    """Build per-sector ranking tables and gaps to the fastest sector lap."""
+
     sectors = {
         "S1": "duration_sector_1",
         "S2": "duration_sector_2",
@@ -81,6 +87,8 @@ def sector_rankings(best_laps):
     return rankings
 
 def compute_team_summary(best_laps):
+    """Aggregate team-level pace and speed indicators from best laps."""
+
     if best_laps.empty or "team_name" not in best_laps.columns:
         return pd.DataFrame()
 
@@ -99,12 +107,16 @@ def compute_team_summary(best_laps):
     return team_summary
 
 def _to_bool_flag(series):
+    """Normalize heterogeneous boolean-like values into a bool Series."""
+
     if series is None:
         return pd.Series(dtype=bool)
     normalized = series.astype(str).str.strip().str.lower()
     return normalized.isin(["1", "true", "t", "yes", "y"])
 
 def classify_laps_advanced(laps_enriched):
+    """Classify laps into push/traffic/inlap/outlap phases using robust heuristics."""
+
     if laps_enriched.empty:
         return pd.DataFrame()
     if any(c not in laps_enriched.columns for c in ["driver_number", "lap_number", "lap_duration"]):
@@ -142,6 +154,8 @@ def classify_laps_advanced(laps_enriched):
     return df
 
 def compute_long_run_summary(laps_classified):
+    """Summarize long-run pace, consistency, and degradation by driver stint."""
+
     if laps_classified.empty:
         return pd.DataFrame()
     if "stint_number" not in laps_classified.columns:
@@ -186,6 +200,8 @@ def compute_long_run_summary(laps_classified):
     return out
 
 def build_scorecards(best_laps, laps_classified, long_run_df):
+    """Create weighted executive scorecards for drivers and teams."""
+
     if best_laps.empty:
         return pd.DataFrame(), pd.DataFrame()
 
@@ -266,6 +282,8 @@ def build_scorecards(best_laps, laps_classified, long_run_df):
     return driver_score, team_score
 
 def prepare_teammate_metrics(best_laps, laps_classified):
+    """Prepare teammate-comparison dataset with timing and execution metrics."""
+
     if best_laps.empty or "team_name" not in best_laps.columns:
         return pd.DataFrame()
 
@@ -306,6 +324,8 @@ def prepare_teammate_metrics(best_laps, laps_classified):
     return base.merge(cons, on="driver_number", how="left").merge(execu, on="driver_number", how="left")
 
 def build_teammate_summary(team_df):
+    """Generate textual bullets comparing two teammates."""
+
     if team_df.empty or len(team_df) < 2:
         return []
     d1, d2 = team_df.iloc[0], team_df.iloc[1]
@@ -335,6 +355,8 @@ def build_teammate_summary(team_df):
     return out[:6]
 
 def build_insights(best_laps, rankings):
+    """Generate high-level session insights from pace, speed, and sectors."""
+
     insights = []
 
     leader = best_laps.iloc[0]
@@ -364,6 +386,8 @@ def build_insights(best_laps, rankings):
     return insights[:5]
 
 def build_marketing_text(best_laps, rankings, country, year, session_name):
+    """Build ready-to-post marketing copy for social content."""
+
     leader = best_laps.iloc[0]
 
     s1 = rankings["S1"].iloc[0]["team_name"] if "S1" in rankings and not rankings["S1"].empty else "N/A"
@@ -381,6 +405,8 @@ def build_marketing_text(best_laps, rankings, country, year, session_name):
     return "\n".join(lines)
 
 def build_executive_insights(best_laps, rankings, team_summary, laps_enriched, session_type=None, race_winner=None):
+    """Generate executive cards focused on outcomes and decision context."""
+
     if best_laps.empty:
         return []
 
@@ -425,4 +451,3 @@ def build_executive_insights(best_laps, rankings, team_summary, laps_enriched, s
             insights.append(("Volatilidade", f"Dispersão operacional da sessão: {spread:.3f}s entre p10 e p90 das voltas."))
 
     return insights[:4]
-

@@ -1,3 +1,5 @@
+"""Data access and normalization layer for OpenF1 endpoints."""
+
 import requests
 import pandas as pd
 import numpy as np
@@ -9,6 +11,8 @@ from src.helpers import debug_print, safe_team_color
 
 @st.cache_data(show_spinner=False, ttl=APP_CONFIG.cache_ttl_short)
 def get_json(endpoint, params=None):
+    """Fetch JSON payload from OpenF1 and return an empty list on failure."""
+
     url = f"{BASE}/{endpoint}"
     try:
         r = requests.get(url, params=params, timeout=30)
@@ -21,6 +25,8 @@ def get_json(endpoint, params=None):
 
 @st.cache_data(show_spinner=False, ttl=APP_CONFIG.cache_ttl_long)
 def get_sessions(year):
+    """Fetch and normalize available sessions for a given year."""
+
     sessions = pd.DataFrame(get_json("sessions", {"year": year}))
     if sessions.empty:
         return sessions
@@ -35,6 +41,8 @@ def get_sessions(year):
     return sessions.reset_index(drop=True)
 
 def filter_sessions_by_country(sessions, country_filter):
+    """Filter a sessions DataFrame by country name (case-insensitive)."""
+
     if sessions.empty or not country_filter:
         return sessions
     if "country_name" not in sessions.columns:
@@ -43,6 +51,8 @@ def filter_sessions_by_country(sessions, country_filter):
     return sessions.loc[mask].reset_index(drop=True)
 
 def format_session_option(session):
+    """Format a session dict into a readable label for Streamlit selectors."""
+
     date_start = pd.to_datetime(session.get("date_start"), errors="coerce", utc=True)
     date_label = date_start.strftime("%Y-%m-%d") if pd.notna(date_start) else "sem data"
     country = session.get("country_name", "N/A")
@@ -52,6 +62,8 @@ def format_session_option(session):
     return f"{date_label} | {country} | {meeting} | {session_name} | key={session_key}"
 
 def normalize_session_type(session):
+    """Map raw session naming into normalized buckets: race/qualifying/practice."""
+
     session_type = (session.get("session_type") or session.get("session_name") or "").strip().lower()
 
     if "race" in session_type:
@@ -65,6 +77,8 @@ def normalize_session_type(session):
 
 @st.cache_data(show_spinner=False, ttl=APP_CONFIG.cache_ttl_short)
 def fetch_session_data(session_key, session_type):
+    """Fetch all datasets used by the dashboard for a given session."""
+
     drivers = pd.DataFrame(get_json("drivers", {"session_key": session_key}))
     laps = pd.DataFrame(get_json("laps", {"session_key": session_key}))
     location = pd.DataFrame(get_json("location", {"session_key": session_key}))
@@ -95,6 +109,8 @@ def fetch_session_data(session_key, session_type):
     }
 
 def get_race_winner(session_result, drivers):
+    """Resolve official race winner from session results with driver metadata fallback."""
+
     if session_result.empty:
         return None
 
@@ -133,6 +149,8 @@ def get_race_winner(session_result, drivers):
     }
 
 def prepare_lap_times(laps, drivers):
+    """Build a lap-times table enriched with driver/team information."""
+
     if laps.empty:
         return pd.DataFrame()
 
@@ -163,6 +181,8 @@ def prepare_lap_times(laps, drivers):
     return lap_times.sort_values(["driver_number", "lap_number"]).reset_index(drop=True)
 
 def enrich_laps_with_stints(laps, stints):
+    """Attach stint/compound information to each lap based on lap ranges."""
+
     if laps.empty:
         return pd.DataFrame()
 
@@ -226,6 +246,8 @@ def enrich_laps_with_stints(laps, stints):
     return pd.concat(frames, ignore_index=True)
 
 def derive_stint_windows(stints, laps_enriched):
+    """Convert stint lap ranges into timestamp windows using lap end times."""
+
     if stints.empty:
         return pd.DataFrame()
     if any(col not in stints.columns for col in ["driver_number", "lap_start", "lap_end"]):
@@ -268,5 +290,6 @@ def derive_stint_windows(stints, laps_enriched):
 
 @st.cache_data(show_spinner=False, ttl=APP_CONFIG.cache_ttl_short)
 def fetch_driver_car_data(session_key, driver_number):
-    return pd.DataFrame(get_json("car_data", {"session_key": session_key, "driver_number": int(driver_number)}))
+    """Fetch per-driver car telemetry for a specific session."""
 
+    return pd.DataFrame(get_json("car_data", {"session_key": session_key, "driver_number": int(driver_number)}))

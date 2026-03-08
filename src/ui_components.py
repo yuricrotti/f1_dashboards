@@ -1,8 +1,12 @@
+"""Reusable Streamlit UI blocks and branding styles for the dashboard."""
+
 import pandas as pd
 import streamlit as st
 
 
 def inject_brand_style():
+    """Inject custom CSS to define the visual identity of the app."""
+
     st.markdown(
         """
         <style>
@@ -94,6 +98,8 @@ def inject_brand_style():
     )
 
 def render_hero(session):
+    """Render the top hero banner with session context metadata."""
+
     session_title = (
         f"{session.get('country_name', 'N/A')} GP {session.get('year', 'N/A')} • "
         f"{session.get('session_name', 'N/A')}"
@@ -117,6 +123,8 @@ def render_hero(session):
     )
 
 def render_kpi_card(label, value, sub):
+    """Render a compact KPI card with label, value, and subtext."""
+
     st.markdown(
         f"""
         <div class="kpi-card">
@@ -129,6 +137,8 @@ def render_kpi_card(label, value, sub):
     )
 
 def render_insight_card(title, text):
+    """Render a compact executive-insight card."""
+
     st.markdown(
         f"""
         <div class="insight-card">
@@ -138,4 +148,3 @@ def render_insight_card(title, text):
         """,
         unsafe_allow_html=True,
     )
-
